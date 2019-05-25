@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/aoyeweb_element.iml" filepath="$PROJECT_DIR$/.idea/aoyeweb_element.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/aoye-manager-web-element.iml" filepath="$PROJECT_DIR$/.idea/aoye-manager-web-element.iml" />
     </modules>
   </component>
 </project>

@@ -30,7 +30,6 @@ let routes = [
         name: '',
         hidden: true
     },
-
     {
         path: '/',
         component: Home,

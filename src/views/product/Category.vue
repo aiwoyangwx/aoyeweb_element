@@ -16,20 +16,14 @@
         </el-col>
 
         <!--列表-->
-        <el-table :data="users" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
-            <el-table-column type="selection" width="55">
+        <el-table :data="items" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
+            <el-table-column type="selection" width="60">
             </el-table-column>
-            <el-table-column type="index" width="60">
+            <el-table-column type="index" label="序号"  width="120" sortable>
             </el-table-column>
-            <el-table-column prop="name" label="姓名" width="120" sortable>
+            <el-table-column prop="id" label="id"  sortable>
             </el-table-column>
-            <el-table-column prop="sex" label="性别" width="100" :formatter="formatSex" sortable>
-            </el-table-column>
-            <el-table-column prop="age" label="年龄" width="100" sortable>
-            </el-table-column>
-            <el-table-column prop="birth" label="生日" width="120" sortable>
-            </el-table-column>
-            <el-table-column prop="addr" label="地址" min-width="180" sortable>
+            <el-table-column prop="cname" label="产品分类"  sortable>
             </el-table-column>
             <el-table-column label="操作" width="150">
                 <template scope="scope">
@@ -117,7 +111,7 @@
                 filters: {
                     key: ''
                 },
-                users: [],
+                items: [],
                 total: 0,
                 page: 1,
                 listLoading: false,
@@ -177,10 +171,11 @@
                 //NProgress.start();
                 //baseUrl+'/product/category/page'
                 axios.get(baseUrl+'/product/category/page', {
-                    params: params }
+                    params: params
+                }
                     ).then((resp)=>{
                         this.total = resp.data.total;
-                        this.users = resp.data.items;
+                        this.items = resp.data.items;
                         this.listLoading = false;
                     });
 

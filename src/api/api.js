@@ -1,7 +1,7 @@
-//import axios from 'axios';
+import axios from 'axios';
 
 //let baseUrl = '192.168.0.166:10010';
-export const baseUrl='192.168.0.166:10010/api';
+export const baseUrl='http://192.168.0.166:10010/api';
 
 
 export const requestLogin = params => { return axios.post(`${baseUrl}/login`, params).then(res => res.data); };
