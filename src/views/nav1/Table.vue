@@ -163,10 +163,10 @@
 			},
 			handleCurrentChange(val) {
 				this.page = val;
-				this.getUsers();
+				this.getCategories();
 			},
 			//获取用户列表
-			getUsers() {
+			getCategories() {
 				let para = {
 					page: this.page,
 					name: this.filters.name
@@ -195,7 +195,7 @@
 							message: '删除成功',
 							type: 'success'
 						});
-						this.getUsers();
+						this.getCategories();
 					});
 				}).catch(() => {
 
@@ -235,7 +235,7 @@
 								});
 								this.$refs['editForm'].resetFields();
 								this.editFormVisible = false;
-								this.getUsers();
+								this.getCategories();
 							});
 						});
 					}
@@ -259,7 +259,7 @@
 								});
 								this.$refs['addForm'].resetFields();
 								this.addFormVisible = false;
-								this.getUsers();
+								this.getCategories();
 							});
 						});
 					}
@@ -284,7 +284,7 @@
 							message: '删除成功',
 							type: 'success'
 						});
-						this.getUsers();
+						this.getCategories();
 					});
 				}).catch(() => {
 
@@ -292,7 +292,7 @@
 			}
 		},
 		mounted() {
-			this.getUsers();
+			this.getCategories();
 		}
 	}
 

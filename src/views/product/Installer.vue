@@ -7,7 +7,7 @@
                     <el-input v-model="filters.name" placeholder="姓名"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" v-on:click="getUsers">查询</el-button>
+                    <el-button type="primary" v-on:click="getInstallers">查询</el-button>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="handleAdd">新增</el-button>
@@ -82,23 +82,32 @@
         <!--新增界面-->
         <el-dialog title="新增" v-model="addFormVisible" :close-on-click-modal="false">
             <el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addForm">
-                <el-form-item label="姓名" prop="name">
-                    <el-input v-model="addForm.name" auto-complete="off"></el-input>
+                <el-form-item label="产品分类" prop="cid">
+                    <el-select v-model="addForm.cid" placeholder="请选择">
+                        <el-option
+                                v-for="category in categories"
+                                :key="category.id"
+                                :label="category.cname"
+                                :value="category.id">
+                        </el-option>
+                    </el-select>
                 </el-form-item>
-                <el-form-item label="性别">
-                    <el-radio-group v-model="addForm.sex">
-                        <el-radio class="radio" :label="1">男</el-radio>
-                        <el-radio class="radio" :label="0">女</el-radio>
-                    </el-radio-group>
+                <el-form-item label="版本名称">
+                    <el-input v-model="addForm.versionCode" auto-complete="off"></el-input>
                 </el-form-item>
-                <el-form-item label="年龄">
-                    <el-input-number v-model="addForm.age" :min="0" :max="200"></el-input-number>
+                <el-form-item label="版本序号">
+                    <el-input-number v-model="addForm.versionNum" :min="0" :max="200"></el-input-number>
                 </el-form-item>
-                <el-form-item label="生日">
-                    <el-date-picker type="date" placeholder="选择日期" v-model="addForm.birth"></el-date-picker>
-                </el-form-item>
-                <el-form-item label="地址">
-                    <el-input type="textarea" v-model="addForm.addr"></el-input>
+                <el-form-item label="版本序号">
+                    <el-upload
+                            class="upload-demo"
+                            drag
+                            action="http://192.168.0.166:10010/api/product/installer/upload"
+                            multiple>
+                        <i class="el-icon-upload"></i>
+                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+                        <div class="el-upload__tip" slot="tip">上传文件不超过500kb</div>
+                    </el-upload>
                 </el-form-item>
             </el-form>
             <div slot="footer" class="dialog-footer">
@@ -123,10 +132,31 @@
                     key: ''
                 },
                 items: [],
+                categories:[{
+                    id:666,
+                    cname:123,
+                }],
                 total: 0,
                 page: 1,
                 listLoading: false,
-                sels: [],//列表选中列
+                //列表选中列
+                sels: [],
+                //新增界面是否显示
+                addFormVisible: false,
+                addLoading: false,
+                addFormRules: {
+                    name: [
+                        { required: true, message: '请输入姓名', trigger: 'blur' }
+                    ]
+                },
+                //新增界面数据
+                addForm: {
+                    cid: '',
+                    versionCode: "",
+                    versionNum: 0,
+                    fileName: '',
+                    fileSize: ''
+                },
 
                 editFormVisible: false,//编辑界面是否显示
                 editLoading: false,
@@ -137,29 +167,12 @@
                 },
                 //编辑界面数据
                 editForm: {
-                    id: 0,
-                    name: '',
-                    sex: -1,
-                    age: 0,
-                    birth: '',
-                    addr: ''
+                    cid: '',
+                    versionCode: -1,
+                    versionNum: 0,
+                    fileName: '',
+                    fileSize: ''
                 },
-
-                addFormVisible: false,//新增界面是否显示
-                addLoading: false,
-                addFormRules: {
-                    name: [
-                        { required: true, message: '请输入姓名', trigger: 'blur' }
-                    ]
-                },
-                //新增界面数据
-                addForm: {
-                    name: '',
-                    sex: -1,
-                    age: 0,
-                    birth: '',
-                    addr: ''
-                }
 
             }
         },
@@ -170,10 +183,10 @@
             },
             handleCurrentChange(val) {
                 this.page = val;
-                this.getUsers();
+                this.getCategories();
             },
             //获取用户列表
-            getUsers() {
+            getInstallers() {
                 let params = {
                     page: this.page,
                     key: this.filters.name
@@ -198,6 +211,16 @@
                     //NProgress.done();
                 });*/
             },
+            getCategories(){
+                axios.get(baseUrl+'/product/category/all')
+                    .then((resp)=>{
+                        debugger;
+                    this.categories = resp.data;
+                }).catch(()=>{
+                    this.$message.error("获取产品分类失败!");
+                });
+            },
+
             //删除
             handleDel: function (index, row) {
                 this.$confirm('确认删除该记录吗?', '提示', {
@@ -213,7 +236,7 @@
                             message: '删除成功',
                             type: 'success'
                         });
-                        this.getUsers();
+                        this.getInstallers();
                     });
                 }).catch(() => {
 
@@ -253,7 +276,7 @@
                                 });
                                 this.$refs['editForm'].resetFields();
                                 this.editFormVisible = false;
-                                this.getUsers();
+                                this.getInstallers();
                             });
                         });
                     }
@@ -268,7 +291,11 @@
                             //NProgress.start();
                             let para = Object.assign({}, this.addForm);
                             para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-                            addUser(para).then((res) => {
+                            axios({
+                                method:'post',
+                                url:baseUrl+ '/product/installer',
+                                data: this.$qs.stringify(this.addForm)
+                            }).then(() => {
                                 this.addLoading = false;
                                 //NProgress.done();
                                 this.$message({
@@ -277,7 +304,10 @@
                                 });
                                 this.$refs['addForm'].resetFields();
                                 this.addFormVisible = false;
-                                this.getUsers();
+                                this.getInstallers();
+                            }).catch(() => {
+                                this.addLoading = false;
+                                this.$message.error("保存失败!");
                             });
                         });
                     }
@@ -302,7 +332,7 @@
                             message: '删除成功',
                             type: 'success'
                         });
-                        this.getUsers();
+                        this.getInstallers();
                     });
                 }).catch(() => {
 
@@ -310,7 +340,8 @@
             }
         },
         mounted() {
-            this.getUsers();
+            this.getInstallers();
+            this.getCategories();
         }
     }
 </script>

@@ -44,7 +44,6 @@
         this.$refs.ruleForm2.resetFields();
       },
       handleSubmit2(ev) {
-        debugger;
         this.$router.push({ path: '/table' });
 
         /*var _this = this;

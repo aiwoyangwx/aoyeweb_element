@@ -1,6 +1,7 @@
 import babelpolyfill from 'babel-polyfill'
 import Vue from 'vue'
 import App from './App'
+import qs from 'qs'
 import ElementUI from 'element-ui'
 import 'element-ui/lib/theme-default/index.css'
 //import './assets/theme/theme-green/index.css'
@@ -14,6 +15,7 @@ import routes from './routes'
 //Mock.bootstrap();
 import 'font-awesome/css/font-awesome.min.css'
 
+Vue.prototype.$qs = qs;
 Vue.use(ElementUI)
 Vue.use(VueRouter)
 Vue.use(Vuex)
