@@ -7,7 +7,7 @@
                     <el-input v-model="filters.name" placeholder="姓名"></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" v-on:click="getCategory">查询</el-button>
+                    <el-button type="primary" v-on:click="getCategories">查询</el-button>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="handleAdd">新增</el-button>
@@ -104,7 +104,8 @@
                     cname: ''
                 },
 
-                addFormVisible: false,//新增界面是否显示
+                //新增界面是否显示
+                addFormVisible: false,
                 addLoading: false,
                 addFormRules: {
                     cname: [
@@ -134,8 +135,6 @@
                     key: this.filters.name
                 };
                 this.listLoading = true;
-                //NProgress.start();
-                //baseUrl+'/product/category/page'
                 axios.get(baseUrl+'/product/category/page', {
                     params: para
                 }).then((resp)=>{

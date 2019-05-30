@@ -51,34 +51,6 @@
             </el-pagination>
         </el-col>
 
-        <!--编辑界面-->
-        <el-dialog title="编辑" v-model="editFormVisible" :close-on-click-modal="false">
-            <el-form :model="editForm" label-width="80px" :rules="editFormRules" ref="editForm">
-                <el-form-item label="姓名" prop="name">
-                    <el-input v-model="editForm.name" auto-complete="off"></el-input>
-                </el-form-item>
-                <el-form-item label="性别">
-                    <el-radio-group v-model="editForm.sex">
-                        <el-radio class="radio" :label="1">男</el-radio>
-                        <el-radio class="radio" :label="0">女</el-radio>
-                    </el-radio-group>
-                </el-form-item>
-                <el-form-item label="年龄">
-                    <el-input-number v-model="editForm.age" :min="0" :max="200"></el-input-number>
-                </el-form-item>
-                <el-form-item label="生日">
-                    <el-date-picker type="date" placeholder="选择日期" v-model="editForm.birth"></el-date-picker>
-                </el-form-item>
-                <el-form-item label="地址">
-                    <el-input type="textarea" v-model="editForm.addr"></el-input>
-                </el-form-item>
-            </el-form>
-            <div slot="footer" class="dialog-footer">
-                <el-button @click.native="editFormVisible = false">取消</el-button>
-                <el-button type="primary" @click.native="editSubmit" :loading="editLoading">提交</el-button>
-            </div>
-        </el-dialog>
-
         <!--新增界面-->
         <el-dialog title="新增" v-model="addFormVisible" :close-on-click-modal="false">
             <el-form :model="addForm" label-width="80px" :rules="addFormRules" ref="addForm">
@@ -98,21 +70,61 @@
                 <el-form-item label="版本序号">
                     <el-input-number v-model="addForm.versionNum" :min="0" :max="200"></el-input-number>
                 </el-form-item>
-                <el-form-item label="版本序号">
+                <el-form-item label="客户端">
                     <el-upload
-                            class="upload-demo"
-                            drag
+                            ref="addUpload"
                             action="http://192.168.0.166:10010/api/product/installer/upload"
-                            multiple>
-                        <i class="el-icon-upload"></i>
-                        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
-                        <div class="el-upload__tip" slot="tip">上传文件不超过500kb</div>
+                            :on-remove="handleRemove"
+                            :on-error="handleError"
+                            :limit="1"
+                    >
+                        <el-button size="small" type="primary">点击上传</el-button>
+                        <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
                     </el-upload>
                 </el-form-item>
             </el-form>
             <div slot="footer" class="dialog-footer">
                 <el-button @click.native="addFormVisible = false">取消</el-button>
                 <el-button type="primary" @click.native="addSubmit" :loading="addLoading">提交</el-button>
+            </div>
+        </el-dialog>
+
+        <!--编辑界面-->
+        <el-dialog title="编辑" v-model="editFormVisible" :close-on-click-modal="false" :before-close="beforeClose">
+            <el-form :model="editForm" label-width="80px" :rules="editFormRules" ref="editForm">
+                <el-form-item label="产品分类" prop="cid">
+                    <el-select v-model="editForm.cid" placeholder="请选择">
+                        <el-option
+                                v-for="category in categories"
+                                :key="category.id"
+                                :label="category.cname"
+                                :value="category.id">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item label="版本名称">
+                    <el-input v-model="editForm.versionCode" auto-complete="off"></el-input>
+                </el-form-item>
+                <el-form-item label="版本序号">
+                    <el-input-number v-model="editForm.versionNum" :min="0" :max="200"></el-input-number>
+                </el-form-item>
+                <el-form-item label="客户端">
+                    <el-upload
+                            ref="editUpload"
+                            :file-list="fileList"
+                            action="http://192.168.0.166:10010/api/product/installer/upload"
+                            :on-remove="handleRemove"
+                            :on-error="handleError"
+                            :limit="1"
+                    >
+                        <el-button size="small" type="primary">点击上传</el-button>
+                        <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+                    </el-upload>
+                </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click.native="editFormVisible = false">取消</el-button>
+                <el-button type="primary" @click.native="editSubmit" :loading="editLoading">提交</el-button>
             </div>
         </el-dialog>
     </section>
@@ -132,13 +144,11 @@
                     key: ''
                 },
                 items: [],
-                categories:[{
-                    id:666,
-                    cname:123,
-                }],
+                categories:[],
                 total: 0,
                 page: 1,
                 listLoading: false,
+                fileList:[],
                 //列表选中列
                 sels: [],
                 //新增界面是否显示
@@ -154,7 +164,7 @@
                     cid: '',
                     versionCode: "",
                     versionNum: 0,
-                    fileName: '',
+                    fileName:'',
                     fileSize: ''
                 },
 
@@ -173,14 +183,9 @@
                     fileName: '',
                     fileSize: ''
                 },
-
             }
         },
         methods: {
-            //性别显示转换
-            formatSex: function (row, column) {
-                return row.sex == 1 ? '男' : row.sex == 0 ? '女' : '未知';
-            },
             handleCurrentChange(val) {
                 this.page = val;
                 this.getCategories();
@@ -192,8 +197,6 @@
                     key: this.filters.name
                 };
                 this.listLoading = true;
-                //NProgress.start();
-                //baseUrl+'/product/category/page'
                 axios.get(baseUrl+'/product/installer/page', {
                         params: params
                     }
@@ -202,85 +205,27 @@
                     this.items = resp.data.items;
                     this.listLoading = false;
                 });
-
-
-                /*getUserListPage(para).then((res) => {
-                    this.total = res.data.total;
-                    this.users = res.data.users;
-                    this.listLoading = false;
-                    //NProgress.done();
-                });*/
             },
+            //查产品分类
             getCategories(){
                 axios.get(baseUrl+'/product/category/all')
                     .then((resp)=>{
-                        debugger;
                     this.categories = resp.data;
                 }).catch(()=>{
                     this.$message.error("获取产品分类失败!");
                 });
             },
 
-            //删除
-            handleDel: function (index, row) {
-                this.$confirm('确认删除该记录吗?', '提示', {
-                    type: 'warning'
-                }).then(() => {
-                    this.listLoading = true;
-                    //NProgress.start();
-                    let para = { id: row.id };
-                    removeUser(para).then((res) => {
-                        this.listLoading = false;
-                        //NProgress.done();
-                        this.$message({
-                            message: '删除成功',
-                            type: 'success'
-                        });
-                        this.getInstallers();
-                    });
-                }).catch(() => {
-
-                });
-            },
-            //显示编辑界面
-            handleEdit: function (index, row) {
-                this.editFormVisible = true;
-                this.editForm = Object.assign({}, row);
-            },
             //显示新增界面
             handleAdd: function () {
                 this.addFormVisible = true;
                 this.addForm = {
-                    name: '',
-                    sex: -1,
-                    age: 0,
-                    birth: '',
-                    addr: ''
+                    cid: '',
+                    versionCode: "",
+                    versionNum: 0,
+                    fileName:'',
+                    fileSize: ''
                 };
-            },
-            //编辑
-            editSubmit: function () {
-                this.$refs.editForm.validate((valid) => {
-                    if (valid) {
-                        this.$confirm('确认提交吗？', '提示', {}).then(() => {
-                            this.editLoading = true;
-                            //NProgress.start();
-                            let para = Object.assign({}, this.editForm);
-                            para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
-                            editUser(para).then((res) => {
-                                this.editLoading = false;
-                                //NProgress.done();
-                                this.$message({
-                                    message: '提交成功',
-                                    type: 'success'
-                                });
-                                this.$refs['editForm'].resetFields();
-                                this.editFormVisible = false;
-                                this.getInstallers();
-                            });
-                        });
-                    }
-                });
             },
             //新增
             addSubmit: function () {
@@ -288,16 +233,18 @@
                     if (valid) {
                         this.$confirm('确认提交吗？', '提示', {}).then(() => {
                             this.addLoading = true;
-                            //NProgress.start();
-                            let para = Object.assign({}, this.addForm);
-                            para.birth = (!para.birth || para.birth == '') ? '' : util.formatDate.format(new Date(para.birth), 'yyyy-MM-dd');
+                            let files=Object.assign({}, this.$refs.addUpload.uploadFiles);
+                            if (files.length = 0) {
+                                this.$message.error("请上传客户端!");
+                            }
+                            this.addForm.fileName = files[0].name;
+                            this.addForm.fileSize = files[0].size;
                             axios({
                                 method:'post',
                                 url:baseUrl+ '/product/installer',
                                 data: this.$qs.stringify(this.addForm)
                             }).then(() => {
                                 this.addLoading = false;
-                                //NProgress.done();
                                 this.$message({
                                     message: '提交成功',
                                     type: 'success'
@@ -305,13 +252,104 @@
                                 this.$refs['addForm'].resetFields();
                                 this.addFormVisible = false;
                                 this.getInstallers();
-                            }).catch(() => {
+                            }).catch((resp) => {
                                 this.addLoading = false;
-                                this.$message.error("保存失败!");
+                                let message = resp.response.data.message;
+                                this.$message.error("保存失败！"+message);
                             });
                         });
                     }
                 });
+            },
+            //删除上传的文件
+            handleRemove: function (file) {
+                let para = { fileName: file.name };
+                axios.delete(baseUrl+'/product/installer/upload', {
+                    params: para
+                }).then(()=>{
+                    this.$message({
+                        message: '文件删除成功',
+                        type: 'success'
+                    });
+                    this.getInstallers();
+                }).catch(() => {
+                    this.$message.error('文件删除失败！');
+                });
+            },
+            handleError:function(err){
+                this.$message.error(err.message);
+            },
+            //删除
+            handleDel: function (index, row) {
+                this.$confirm('确认删除该记录吗?', '提示', {
+                    type: 'warning'
+                }).then(() => {
+                    this.listLoading = true;
+                    let para = { id: row.id };
+                    axios.delete(baseUrl+'/product/installer', {
+                        params: para
+                    }).then(()=>{
+                        this.listLoading = false;
+                        this.$message({
+                            message: '文件删除成功',
+                            type: 'success'
+                        });
+                        this.getInstallers();
+                    }).catch(() => {
+                        this.listLoading = false;
+                        this.$message.error('文件删除失败！');
+                    });
+                })
+            },
+            //显示编辑界面
+            handleEdit: function (index, row) {
+                this.editFormVisible = true;
+                let file= {name:row.fileName}
+                this.fileList.push(file);
+                this.editForm = Object.assign({}, row);
+            },
+
+            //编辑
+            editSubmit: function () {
+                this.$refs.editForm.validate((valid) => {
+                    if (valid) {
+                        this.$confirm('确认提交吗？', '提示', {}).then(() => {
+                            this.editLoading = true;
+                            let files=Object.assign({}, this.$refs.editUpload.uploadFiles);
+                            if (files.length = 0) {
+                                this.$message.error("请上传客户端!");
+                            }
+                            debugger
+                            this.editForm.fileName = files[0].name;
+                            if (files[0].size) {
+                                this.editForm.fileSize = files[0].size;
+                            }
+                            axios({
+                                method:'put',
+                                url:baseUrl+ '/product/installer',
+                                data: this.$qs.stringify(this.editForm)
+                            }).then(() => {
+                                this.editLoading = false;
+                                this.$message({
+                                    message: '提交成功',
+                                    type: 'success'
+                                });
+                                this.$refs['editForm'].resetFields();
+                                this.editFormVisible = false;
+                                this.getInstallers();
+                            }).catch((resp) => {
+                                this.editLoading = false;
+                                let message = resp.response.data.message;
+                                this.$message.error("保存失败！"+message);
+                            });
+
+                        });
+                    }
+                });
+            },
+            beforeClose:function(){
+                this.fileList=[];
+                this.editFormVisible = false;
             },
             selsChange: function (sels) {
                 this.sels = sels;
@@ -345,7 +383,5 @@
         }
     }
 </script>
-
 <style scoped>
-
 </style>
