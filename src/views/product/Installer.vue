@@ -4,7 +4,7 @@
         <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
             <el-form :inline="true" :model="filters">
                 <el-form-item>
-                    <el-input v-model="filters.name" placeholder="姓名"></el-input>
+                    <el-input v-model="filters.name" placeholder="版本名称"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" v-on:click="getInstallers">查询</el-button>
@@ -19,7 +19,7 @@
         <el-table :data="items" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
             <el-table-column type="selection" width="60">
             </el-table-column>
-            <el-table-column type="index" label="序号" sortable>
+            <el-table-column type="index" label="序号" width="100" sortable>
             </el-table-column>
             <el-table-column prop="id" label="id"  width="200" sortable>
             </el-table-column>
@@ -131,9 +131,7 @@
 </template>
 
 <script>
-    import util from '../../common/js/util'
     import axios from 'axios';
-    //import NProgress from 'nprogress'
     import { baseUrl } from '../../api/api';
 
     export default {
@@ -188,7 +186,7 @@
         methods: {
             handleCurrentChange(val) {
                 this.page = val;
-                this.getCategories();
+                this.getInstallers();
             },
             //获取用户列表
             getInstallers() {
@@ -342,7 +340,6 @@
                                 let message = resp.response.data.message;
                                 this.$message.error("保存失败！"+message);
                             });
-
                         });
                     }
                 });

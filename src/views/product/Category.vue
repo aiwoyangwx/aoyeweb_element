@@ -4,7 +4,7 @@
         <el-col :span="24" class="toolbar" style="padding-bottom: 0px;">
             <el-form :inline="true" :model="filters">
                 <el-form-item>
-                    <el-input v-model="filters.name" placeholder="姓名"></el-input>
+                    <el-input v-model="filters.name" placeholder="分类名称"></el-input>
                 </el-form-item>
                 <el-form-item>
                     <el-button type="primary" v-on:click="getCategories">查询</el-button>
@@ -19,7 +19,7 @@
         <el-table :data="items" highlight-current-row v-loading="listLoading" @selection-change="selsChange" style="width: 100%;">
             <el-table-column type="selection" width="60">
             </el-table-column>
-            <el-table-column type="index" label="序号"  width="120" sortable>
+            <el-table-column type="index" label="序号"  width="100" sortable>
             </el-table-column>
             <el-table-column prop="id" label="id"  sortable>
             </el-table-column>
